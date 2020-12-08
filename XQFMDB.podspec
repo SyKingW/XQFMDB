@@ -14,12 +14,13 @@ Pod::Spec.new do |s|
     
     s.requires_arc = true   #是否必须arc
     
-    s.resources = 'XQFMDB/**/*.{h,m}'
+    s.source_files = 'XQFMDB/**/*.{h,m}'
     #s.prefix_header_file = 'XQCompanyTool/XQCompanyToolPrefixHeader.pch'
     
     #依赖的第三方库
     #s.dependency "YYModel"
     s.dependency "FMDB"
+    s.dependency "XQProjectTool"
     
     #项目配置
     #s.pod_target_xcconfig = {

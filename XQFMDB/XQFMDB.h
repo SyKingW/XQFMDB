@@ -13,8 +13,10 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <FMDB/FMDB.h>
 
+
+@class FMDatabase;
+@class FMResultSet;
 
 @interface XQFMDB : NSObject
 

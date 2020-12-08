@@ -9,6 +9,7 @@
 #import "XQFMDB.h"
 // runtime获取变量名称和变量值
 #import <XQProjectTool/NSObject+XQViewOC.h>
+#import <FMDB/FMDB.h>
 
 @interface XQFMDB ()
 
