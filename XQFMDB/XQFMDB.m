@@ -137,6 +137,23 @@ static XQFMDB *xq_fmdb_ = nil;
     return is;
 }
 
++ (BOOL)deleteWithDb:(FMDatabase *)db table:(NSString *)table where:(NSString *)where {
+    NSString *formatStr = @"";
+    if (where.length == 0) {
+        // 删除整个表
+        formatStr = [NSString stringWithFormat:@"delete from %@", table];
+    }else {
+        formatStr = [NSString stringWithFormat:@"delete from %@ where %@", table, where];
+    }
+    
+    BOOL result = [db executeUpdate:formatStr];
+    if (!result) {
+        NSLog(@"删除失败 table = %@, where = %@", table, where);
+    }
+    
+    return result;
+}
+
 + (BOOL)deleteWithDb:(FMDatabase *)db table:(NSString *)table wDic:(NSDictionary *)wDic {
     NSString *str = @"";
     NSString *formatStr = @"";
@@ -287,6 +304,18 @@ static XQFMDB *xq_fmdb_ = nil;
         NSString *format = [NSString stringWithFormat:@"select count(*) from %@", table];
         if (str.length != 0) {
             format = [NSString stringWithFormat:@"select count(*) from %@ where %@", table, str];
+        }
+        rows = [db intForQuery:format];
+    }];
+    return rows;
+}
+
++ (int)queryRowsWithTable:(NSString *)table where:(NSString *)where {
+    __block int rows = -1;
+    [self getDBWithResult:^(FMDatabase *db) {
+        NSString *format = [NSString stringWithFormat:@"select count(*) from %@", table];
+        if (where.length != 0) {
+            format = [NSString stringWithFormat:@"select count(*) from %@ where %@", table, where];
         }
         rows = [db intForQuery:format];
     }];

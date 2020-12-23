@@ -149,6 +149,9 @@
  */
 + (BOOL)deleteNullWithTable:(NSString *)table key:(NSString *)key;
 
+/// 删除
++ (BOOL)deleteWithDb:(FMDatabase *)db table:(NSString *)table where:(NSString *)where;
+
 #pragma mark -- 更新
 
 /**
@@ -195,11 +198,24 @@
 + (int)queryRowsWithTable:(NSString *)table wDic:(NSDictionary *)wDic;
 
 /**
+ 查询某个表有多少条数据
+
+ @param where 要查询的值, 如不填, 则直接插整个表
+ */
++ (int)queryRowsWithTable:(NSString *)table where:(NSString *)where;
+
+/**
  查询
  
  @param where 条件
  */
 + (void)queryWithDB:(FMDatabase *)db table:(NSString *)table where:(NSString *)where callback:(void(^)(FMDatabase *db, NSDictionary *dic))callback;
+
+/**
+ 查询
+ 
+ @param where 条件
+ */
 + (void)queryWithDB:(FMDatabase *)db table:(NSString *)table where:(NSString *)where normalCallback:(void(^)(FMDatabase *db, FMResultSet *resultSet))callback;
 
 
