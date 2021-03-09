@@ -8,8 +8,6 @@
 
 /**
  现在删除, 更新, 查询, 都是直接默认  and =, 并没有 or > < 这种, 后面有需求再写吧
- 
- 
  */
 
 #import <Foundation/Foundation.h>
@@ -43,14 +41,14 @@
       @"字段名": @"字段类型", // 如果字段类型为@"", 那么会默认填text
    }
  字段类型: NSString -> text, NSInteger -> integer, NSData -> blob 大小写不区分
- 文本： Text
- 整形： Integer
- 二进制数据: Blob
- 浮点型： Real Float、Double
- 布尔型： Boolean
- 时间型： Time
- 日期型： Date
- 时间戳： TimeStamp
+ - 文本： Text
+ - 整形： Integer
+ - 二进制数据: Blob
+ - 浮点型： Real Float、Double
+ - 布尔型： Boolean
+ - 时间型： Time
+ - 日期型： Date
+ - 时间戳： TimeStamp
  */
 + (void)createWithTableName:(NSString *)tableName autoincrementKey:(NSString *)autoincrementKey columnDic:(NSDictionary *)columnDic;
 
@@ -218,6 +216,40 @@
  */
 + (void)queryWithDB:(FMDatabase *)db table:(NSString *)table where:(NSString *)where normalCallback:(void(^)(FMDatabase *db, FMResultSet *resultSet))callback;
 
+#pragma mark - 触发器
+
+/// 删除触发器
+/// @param triggerName 触发器名称
++ (void)deleteTriggerWithDB:(FMDatabase *)db triggerName:(NSString *)triggerName;
+
+/// 创建触发器
+/// @param triggerName 触发器名称
+/// @param triggerOperation 触发动作 INSERT、DELETE 和 UPDATE
+/// @param triggerKey 触发表里面的字段(如果是 @""，那么就是所有字段都触发)
+/// @param triggerTable 触发的表名
+/// @param executeTiming 执行时机, BEFORE 或 AFTER
+/// @param executeCode 触发时，执行sql的语句(可多条语句)
+/// 如果想取当前值，比如取 name 字段 new.name
+/// 旧的值, old.name
+/// @note 举两个例子
+///
+/// - 当有更新时就触发，并且更改 name 为 aaa: [XQFMDB createTriggerWithDB:db triggerName:@"triggerName" triggerOperation:@"UPDATE" triggerKey:@"" triggerTabel:@"tableName" executeTiming:@"BEFORE" executeCode:@"UPDATE school SET name = 'aaa';"];
+/// - 当有 name 字段更新时触发，并且更改 count 和 imageName: [XQFMDB createTriggerWithDB:db triggerName:@"triggerName" triggerOperation:@"UPDATE" triggerKey:@"name" triggerTabel:@"tableName" executeTiming:@"BEFORE" executeCode:@"UPDATE school SET count = '11';UPDATE school SET imageName = 'aaa';"];
+///
++ (void)createTriggerWithDB:(FMDatabase *)db
+                triggerName:(NSString *)triggerName
+           triggerOperation:(NSString *)triggerOperation
+                 triggerKey:(NSString *)triggerKey
+               triggerTabel:(NSString *)triggerTable
+              executeTiming:(NSString *)executeTiming
+                executeCode:(NSString *)executeCode;
+
+
+/// 获取触发器列表
+/// @param table 表名，如果传 @"", 则查询整个数据库的触发器
+/// @param callback 返回数据如下 
+/// {"sql":"CREATE TRIGGER nameUpdate BEFORE UPDATE OF name ON school BEGIN UPDATE school SET imageName = 'xxx1233777' where sId = old.sId; END","rootpage":0,"type":"trigger","name":"nameUpdate","tbl_name":"school"}
++ (void)queryTriggerListWithDB:(FMDatabase *)db tabel:(NSString *)table callback:(void(^)(NSDictionary *dic))callback;
 
 
 @end

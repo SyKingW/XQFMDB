@@ -9,7 +9,7 @@
 #import "XQFMDB.h"
 // runtime获取变量名称和变量值
 #import <XQProjectTool/NSObject+XQViewOC.h>
-#import <FMDB/FMDB.h>
+#import <fmdb/FMDB.h>
 
 @interface XQFMDB ()
 
@@ -46,7 +46,7 @@ static XQFMDB *xq_fmdb_ = nil;
     return is;
 }
 
-    // 插入设备到某网关
+    // 插入
 + (BOOL)insertWithDB:(FMDatabase *)db table:(NSString *)table dic:(NSDictionary *)dic {
     /*
     NSString *keys = @"";
@@ -372,7 +372,9 @@ static XQFMDB *xq_fmdb_ = nil;
     
     
     NSMutableDictionary *muDic = [NSMutableDictionary dictionary];
-    [muDic addEntriesFromDictionary:columnDic];
+    if (columnDic) {
+        [muDic addEntriesFromDictionary:columnDic];
+    }
     [muDic addEntriesFromDictionary:dic];
     
     [self createWithDB:db tableName:tableName autoincrementKey:autoincrementKey columnDic:muDic];
@@ -545,6 +547,83 @@ static XQFMDB *xq_fmdb_ = nil;
     }
     
     return is;
+}
+
+#pragma mark - 触发器
+
+/// 删除触发器
+/// @param triggerName 触发器名称
++ (void)deleteTriggerWithDB:(FMDatabase *)db triggerName:(NSString *)triggerName {
+    // 删除触发器
+    [self getDBWithResult:^(FMDatabase *db) {
+        NSString *str = [NSString stringWithFormat:@"DROP TRIGGER IF EXISTS %@", triggerName];
+        [db executeUpdate:str];
+    }];
+}
+
+/// 创建触发器
+/// @param triggerName 触发器名称
+/// @param triggerOperation 触发动作 INSERT、DELETE 和 UPDATE
+/// @param triggerKey 触发表里面的字段
+/// @param triggerTable 触发的表名
+/// @param executeTiming 执行时机, BEFORE 或 AFTER
+/// @param executeCode 触发时，执行sql的语句(可多条语句)
+/// 如果想取当前值，比如取 name 字段 new.name
+/// 旧的值, old.name
++ (void)createTriggerWithDB:(FMDatabase *)db triggerName:(NSString *)triggerName triggerOperation:(NSString *)triggerOperation triggerKey:(NSString *)triggerKey triggerTabel:(NSString *)triggerTable executeTiming:(NSString *)executeTiming executeCode:(NSString *)executeCode {
+    
+    NSString *str = [NSString stringWithFormat:@""
+                     "CREATE TRIGGER IF NOT EXISTS %@ %@ %@ OF %@ "
+                     "ON %@ "
+                     "BEGIN "
+                     
+                     "%@ "
+                     
+                     "END;",
+                     triggerName, executeTiming, triggerOperation, triggerKey, triggerTable, executeCode];
+    
+    if (triggerKey.length == 0) {
+        str = [NSString stringWithFormat:@""
+               "CREATE TRIGGER IF NOT EXISTS %@ %@ %@ "
+               "ON %@ "
+               "BEGIN "
+               
+               "%@ "
+               
+               "END;",
+               triggerName, executeTiming, triggerOperation, triggerTable, executeCode];
+    }
+    
+    [db executeUpdate:str];
+}
+
+
+/// 获取触发器列表
+/// @param table 表名，如果传 @"", 则查询整个数据库的触发器
++ (void)queryTriggerListWithDB:(FMDatabase *)db tabel:(NSString *)table callback:(void(^)(NSDictionary *dic))callback {
+    FMResultSet *resultSet = nil;
+    if (table.length == 0) {
+        resultSet = [db executeQuery:@""
+         "SELECT * FROM sqlite_master "
+         "WHERE type = 'trigger';"
+         ""
+         ];
+    }else {
+        NSString *str = [NSString stringWithFormat:@""
+                         "SELECT * FROM sqlite_master "
+                         "WHERE type = 'trigger' and tbl_name = '%@';"
+                         "",
+                         table];
+        resultSet = [db executeQuery:str];
+    }
+    
+    
+    if (callback) {
+        while (resultSet.next) {
+            NSDictionary *dic = [resultSet resultDictionary];
+            callback(dic);
+        }
+    }
 }
 
 #pragma mark -- 获取db
@@ -824,6 +903,49 @@ NSString *qFormat = @""
 "";
  
  key AS 别名 是别名某个字段
+ 
+ 
+ 
+ 
+ 
+ 
+ // 删除触发器
+ [db executeUpdate:@"DROP TRIGGER IF EXISTS nameUpdate"];
+ 
+ 
+ // 创建一次就存在不能再次创建, 需要删除才能再次创建
+ // BEFORE AFTER
+ // UPDATE DELETE INSERT
+ // new 是新的值, old 是老的值
+ NSString *trigger = [NSString stringWithFormat:@""
+                      "CREATE TRIGGER IF NOT EXISTS %@ BEFORE UPDATE OF name "
+                      "ON %@ "
+                      "BEGIN "
+                      
+                      "UPDATE %@ SET imageName = 'xxx1233777' where sId = old.sId; "
+                      
+                      "END;",
+                      @"nameUpdate", tableName_school, tableName_school];
+ [db executeUpdate:trigger];
+ 
+ // 获取触发器
+ // WHERE type = 'trigger' and tbl_name = 表名;
+ {
+     "sql":"CREATE TRIGGER nameUpdate BEFORE UPDATE OF name ON school BEGIN UPDATE school SET imageName = 'xxx1233777' where sId = old.sId; END",
+     "rootpage":0,
+     "type":"trigger",
+     "name":"nameUpdate",
+     "tbl_name":"school"
+ }
+ FMResultSet *resultSet = [db executeQuery:@""
+  "SELECT * FROM sqlite_master "
+  "WHERE type = 'trigger';"
+  ""
+  ];
+ 
+ while (resultSet.next) {
+     NSDictionary *dic = [resultSet resultDictionary];
+ }
  
  
  */
